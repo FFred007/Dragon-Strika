@@ -14,7 +14,7 @@ export default function Home() {
     const load = () =>
       api<{ games: GameSummary[] }>("/api/games")
         .then((d) => alive && (setGames(d.games), setError(null)))
-        .catch((e) => alive && setError(e.message));
+        .catch((e) => alive && (setError(e.message), setGames((g) => g ?? [])));
     load();
     const t = setInterval(() => !document.hidden && load(), 3000);
     return () => {

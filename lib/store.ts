@@ -136,11 +136,27 @@ function memoryStore(): Store {
 
 let cached: Store | null = null;
 
+/** Trouve les identifiants Upstash, même si Vercel les a préfixés (ex. STORAGE_KV_REST_API_URL). */
+function findRedisEnv(): { url: string; token: string } | null {
+  const env = process.env;
+  const pairs: [string, string][] = [
+    ["KV_REST_API_URL", "KV_REST_API_TOKEN"],
+    ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"],
+  ];
+  for (const [u, t] of pairs) {
+    for (const key of Object.keys(env)) {
+      if (!key.endsWith(u) || !env[key]) continue;
+      const token = env[key.slice(0, -u.length) + t];
+      if (token) return { url: env[key]!, token };
+    }
+  }
+  return null;
+}
+
 export function store(): Store {
   if (cached) return cached;
-  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (url && token) cached = redisStore(url, token);
+  const creds = findRedisEnv();
+  if (creds) cached = redisStore(creds.url, creds.token);
   else if (process.env.NODE_ENV !== "production" || process.env.ALLOW_MEMORY_STORE === "1") cached = memoryStore();
   else
     throw new Error(
