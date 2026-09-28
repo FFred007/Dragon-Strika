@@ -20,7 +20,7 @@ export const POST = (req: Request, { params }: { params: Promise<{ id: string }>
     // Le dé est tiré côté serveur : A lance, puis B, à chaque tour.
     const side = expected % 2 === 0 ? "A" : "B";
     const f = side === "A" ? game.a : game.b;
-    const k = f.kind === "pj" && /ark/i.test(f.name) ? 2 : 0;
+    const k = f.kind === "pj" && /ark/i.test(f.name) ? 4 : 0;
     const roll: Roll = { side, value: Math.max(1, randomInt(1, 21) - k), at: Date.now() };
     const ok = await s.pushRoll(id, expected, roll);
     const rolls = await s.getRolls(id);
