@@ -18,7 +18,10 @@ export const POST = (req: Request, { params }: { params: Promise<{ id: string }>
     if (game.status !== "live") return json({ error: "La partie est terminée." }, 409);
 
     // Le dé est tiré côté serveur : A lance, puis B, à chaque tour.
-    const roll: Roll = { side: expected % 2 === 0 ? "A" : "B", value: randomInt(1, 21), at: Date.now() };
+    const side = expected % 2 === 0 ? "A" : "B";
+    const f = side === "A" ? game.a : game.b;
+    const k = f.kind === "pj" && /ark/i.test(f.name) ? 2 : 0;
+    const roll: Roll = { side, value: Math.max(1, randomInt(1, 21) - k), at: Date.now() };
     const ok = await s.pushRoll(id, expected, roll);
     const rolls = await s.getRolls(id);
     return json({ ok, rolls }, ok ? 200 : 409);
